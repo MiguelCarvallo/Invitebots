@@ -1,3 +1,4 @@
+require('dotenv').config(); // Cargar variables del .env
 const { Client, GatewayIntentBits } = require("discord.js");
 
 const client = new Client({
@@ -8,8 +9,10 @@ const client = new Client({
   ],
 });
 
-const TOKEN = "MTQyMTU4MDQzNTgyNTA5ODc5Mw.GltH46.UbJYP6r1ugEAtyL38yKLaiuGup5bs8vHYsJAg8"; // Pon tu token real aquí
-const LOG_CHANNEL_ID = "1421354318832865302"; // Canal de notificaciones
+// Usar variables de entorno en lugar de poner token y canal directo
+const TOKEN = process.env.BOT_TOKEN;
+const LOG_CHANNEL_ID = process.env.LOG_CHANNEL_ID;
+
 const ROLES = [
   { count: 3, roleId: "1421357901259477032" },
   { count: 10, roleId: "1421358012765044827" },
@@ -22,12 +25,12 @@ let invitesCache = new Map();
 let userInvites = new Map();
 
 // ===== Manejo de errores y reconexiones =====
-client.on("error", (error) => console.error("Error del bot:", error));
-client.on("disconnect", (event) => console.log("Bot desconectado:", event));
-client.on("reconnecting", () => console.log("Bot reconectando..."));
-client.on("warn", (info) => console.log("Advertencia:", info));
+client.on("error", (error) => console.error("Bot error:", error));
+client.on("disconnect", (event) => console.log("Bot disconnected:", event));
+client.on("reconnecting", () => console.log("Bot reconnecting..."));
+client.on("warn", (info) => console.log("Warning:", info));
 
-// ===== Función de asignar rol y notificar en canal =====
+// ===== Función de asignar rol y notificar =====
 async function assignRole(inviter, count, guild) {
   try {
     const roleConfig = ROLES.find(r => r.count === count);
@@ -38,20 +41,20 @@ async function assignRole(inviter, count, guild) {
     if (!role || !user) return;
 
     await user.roles.add(role);
-    console.log(`🎉 ${inviter.tag} alcanzó ${count} invitaciones y recibió el rol ${role.name}`);
+    console.log(`🎉 ${inviter.tag} reached ${count} invites and received the role ${role.name}`);
 
     const logChannel = guild.channels.cache.get(LOG_CHANNEL_ID);
     if (logChannel) {
-      logChannel.send(`🎉 ¡Felicidades ${inviter}! Alcanzaste ${count} invitaciones y obtuviste el rol **${role.name}**.`);
+      logChannel.send(`🎉 Congratulations ${inviter}! You reached ${count} invites and got the role **${role.name}**.`);
     }
   } catch (error) {
-    console.error("Error al asignar rol:", error);
+    console.error("Error assigning role:", error);
   }
 }
 
-// ===== Evento listo =====
+// ===== Evento ready =====
 client.once("ready", async () => {
-  console.log(`✅ Bot conectado como ${client.user.tag}`);
+  console.log(`✅ Bot connected as ${client.user.tag}`);
   const guild = client.guilds.cache.first();
   if (guild) {
     const invites = await guild.invites.fetch();
@@ -81,7 +84,7 @@ client.on("guildMemberAdd", async (member) => {
 
     await assignRole(inviter, count, guild);
   } catch (error) {
-    console.error("Error en guildMemberAdd:", error);
+    console.error("Error in guildMemberAdd:", error);
   }
 });
 
